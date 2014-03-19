@@ -1,0 +1,14 @@
+{
+  "name": "lurker",
+  "version": "0.0.1",
+  "description": "Lurker",
+  "main": "app.js",
+  "author": {
+    "name": "nescalante",
+    "email": "nlante@gmail.com"
+  },
+  "repository": {},
+  "dependencies": {
+    "cheerio": "~0.13.1"
+  }
+}
