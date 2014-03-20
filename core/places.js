@@ -13,9 +13,9 @@ module.exports = {
         prepend = (options && options.prepend) || '';
         
         util.batch(pageUrls, 6, function (item, index, next) {
-            var url = prepend + item;
+            console.log('loading page ' + (index + 1) + '/' + pageUrls.length);
 
-            console.log('loading ' + url);
+            var url = prepend + item;
 
             getByPage(url, strategy, function (err, resources) {
                 if (err) {
@@ -26,8 +26,6 @@ module.exports = {
                 resources.forEach(function (href) {
                     result.push(href);
                 });
-
-                console.log(result.length + ' places collected')
 
                 next();
             });

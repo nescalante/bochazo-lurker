@@ -1,3 +1,5 @@
+var http = require('http');
+
 module.exports = {
     name: 'HoySeJuega',
     pagesUrl: 'http://www.hoysejuega.com/listado-canchas.htm',
@@ -41,7 +43,39 @@ module.exports = {
         result.howToArrive = getHowToArrive();
         result.courts = getCourts();
 
-        callback(null, result);
+        http.get('http://localhost:62504/?url=http://maps.googleapis.com/maps/api/geocode/json?address=' + result.address + '&sensor=false&language=es', function (res) {
+            var mapSource = '';
+
+            res.on("data", function(body) {
+                mapSource += body;
+            });
+
+            res.on('end', function() {
+                var json = eval("(" + mapSource + ")");
+
+                if (json.results && json.results[0]) {
+                    result.originalAddress = result.address;
+                    result.address = json.results[0].formatted_address;
+                    result.addressComponents = json.results[0].address_components.map(function (i) {
+                        return {
+                            longName: i.long_name,
+                            shortName: i.short_name,
+                            types: i.types
+                        };
+                    });
+                    result.location = [json.results[0].geometry.location.lat, json.results[0].geometry.location.lng];
+                }
+                else {
+                    result.addressError = true;
+                }
+
+                callback(null, result);
+            });
+        }).on('error', function (err) {
+            result.addressError = true;
+
+            callback(null, result);
+        });
 
         function getCourts() {
             var courts = [];

@@ -27,7 +27,7 @@ module.exports = {
                 console.log('');
 
                 util.batch(hrefs, 6, function (item, index, next) {
-                    console.log('loading ' + (index + 1) + '/' + hrefs.length + ' on url ' + hrefs[index]);
+                    console.log('loading place ' + (index + 1) + '/' + hrefs.length);
 
                     places.get(hrefs[index], strategy, options, function (err, result) { 
                         if (err) {
@@ -39,7 +39,8 @@ module.exports = {
                         next();
                     });
                 }, function () {
-                    console.log('finished!');
+                    console.log('scrapping finished!');
+                    console.log('');
 
                     fs.writeFile('data.json', JSON.stringify(total), function(err) {
                         if(err) {
@@ -47,7 +48,7 @@ module.exports = {
                         }
 
                         console.log('json successfully saved');
-                    }); 
+                    });
                 })
             });
         });

@@ -14,7 +14,7 @@ module.exports = {
                 var querySelector = cheerio.load(data);
 
                 callback(null, querySelector);
-            })
+            });
         }).on('error', function (e) {
             callback(e);
         });
