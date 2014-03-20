@@ -1,6 +1,7 @@
 var pages = require('./pages'),
     places = require('./places'),
-    util = require('../util');
+    util = require('../util'),
+    fs = require('fs');
 
 module.exports = {
     import: function (strategy, options) {
@@ -16,6 +17,8 @@ module.exports = {
             console.log('loading places resources ...');
 
             places.getUrls(data, strategy, options, function (err, hrefs) {
+                var total = [];
+
                 if (err) {
                     throw err;
                 }
@@ -31,12 +34,20 @@ module.exports = {
                             throw err;
                         }
 
-                        console.log(result);
+                        total.push(result);
 
                         next();
                     });
                 }, function () {
                     console.log('finished!');
+
+                    fs.writeFile('data.json', JSON.stringify(total), function(err) {
+                        if(err) {
+                          throw err;
+                        }
+
+                        console.log('json successfully saved');
+                    }); 
                 })
             });
         });

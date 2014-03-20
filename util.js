@@ -44,7 +44,7 @@ module.exports = {
                     if (array[index]) { 
                         next();
                     }
-                    else if (!justSent && !array[processed]) {
+                    else if (!justSent && !array[processed] && done) {
                         done();
 
                         justSent = true;
