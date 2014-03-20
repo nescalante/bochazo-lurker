@@ -1,5 +1,6 @@
 var pages = require('./pages'),
-    places = require('./places');
+    places = require('./places'),
+    util = require('../util');
 
 module.exports = {
     import: function (strategy, options) {
@@ -22,23 +23,21 @@ module.exports = {
                 console.log('a total of ' + hrefs.length + ' places has been loaded');
                 console.log('');
 
-                (function next(index) {
-                    index = index || 0;
+                util.batch(hrefs, 6, function (item, index, next) {
+                    console.log('loading ' + (index + 1) + '/' + hrefs.length + ' on url ' + hrefs[index]);
 
-                    if (hrefs[index]) {
-                        console.log('loading ' + (index + 1) + '/' + hrefs.length + ' on url ' + hrefs[index]);
+                    places.get(hrefs[index], strategy, options, function (err, result) { 
+                        if (err) {
+                            throw err;
+                        }
 
-                        places.get(hrefs[index], strategy, options, function (err, result) { 
-                            if (err) {
-                                throw err;
-                            }
+                        console.log(result);
 
-                            console.log(result);
-
-                            next(index + 1);
-                        });
-                    }
-                })();
+                        next();
+                    });
+                }, function () {
+                    console.log('finished!');
+                })
             });
         });
     }

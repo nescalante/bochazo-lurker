@@ -1,5 +1,4 @@
-var http = require('../httpHelper'),
-    cheerio = require('cheerio');
+var util = require('../util');
 
 module.exports = {
     get: function (strategy, options, callback) {
@@ -12,7 +11,7 @@ module.exports = {
 
         prepend = (options && options.prepend) || '';
 
-        http.load(prepend + strategy.pagesUrl, function (err, querySelector) {
+        util.load(prepend + strategy.pagesUrl, function (err, querySelector) {
             var hrefs;
 
             if (err) {

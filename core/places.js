@@ -1,5 +1,4 @@
-var http = require('../httpHelper'),
-    cheerio = require('cheerio');
+var util = require('../util');
 
 module.exports = {
     getUrls: function (pageUrls, strategy, options, callback) {
@@ -13,7 +12,7 @@ module.exports = {
 
         prepend = (options && options.prepend) || '';
         
-        http.batch(pageUrls, 4, function (item, index, next) {
+        util.batch(pageUrls, 6, function (item, index, next) {
             var url = prepend + item;
 
             console.log('loading ' + url);
@@ -46,7 +45,7 @@ module.exports = {
 
         prepend = (options && options.prepend) || '';
 
-        http.load(prepend + placeUrl, function (err, querySelector) {
+        util.load(prepend + placeUrl, function (err, querySelector) {
             if (err) {
                 callback(err, null);
                 return;
@@ -58,7 +57,7 @@ module.exports = {
 };
 
 function getByPage(pageUrl, strategy, callback) {
-    http.load(pageUrl, function (err, querySelector) {
+    util.load(pageUrl, function (err, querySelector) {
         if (err) {
             callback(err);
             return;

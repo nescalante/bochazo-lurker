@@ -31,14 +31,14 @@ module.exports = {
     },
     getPlace: function (querySelector, callback) {
         var result = {},
-            title = querySelector("title").text(),
+            title = querySelector('title').text(),
             phones = [],
             addresses = [];
 
         // place data scan
-        result.name = title.substring(0, title.indexOf(' - Dirección'));
+        result.description = title.substring(0, title.indexOf(' - Dirección'));
         
-        querySelector("p.txt15")
+        querySelector('p.txt15')
             .text()
             .split('\r\n')
             .join(',')
@@ -47,7 +47,7 @@ module.exports = {
                 return i.trim();
             })
             .filter(function (i) {
-                return i != '';
+                return i != '' && i.substring(0, 5).toLowerCase() != 'entre';
             })
             .map(function (i) {
                 if (addresses.indexOf(i) < 0) {
@@ -58,11 +58,14 @@ module.exports = {
         result.address = addresses.join(', ');
 
         // phones scan
-        querySelector(".txt18 + .txt16")
+        querySelector('.txt18 + .txt16')
             .text()
             .split(',')
             .map(function (i) {
                 return i.trim();
+            })
+            .filter(function (i) {
+                return i != '';
             })
             .forEach(function (item, index) {
                 var source = item
@@ -83,6 +86,32 @@ module.exports = {
             });
 
         result.phones = phones;
+        
+        // tags collection
+        result.tags = [];
+        
+        querySelector('ul.txt15 li').each(function (ix, item) {
+            querySelector(item).text()
+                .split('/')
+                .map(function (i) {
+                    return i.trim().toLowerCase();
+                })
+                .filter(function (i) {
+                    return i != '';
+                })
+                .map(function (i) {
+                    result.tags.push(i);
+                })
+        });
+
+        querySelector('p.negro.txt12').each(function (ix, item) { 
+            var desc = 'DESCRIPCIÓN:',
+                text = querySelector(item).text();
+
+            if (text.indexOf(desc) == 0) {
+                result.info = text.substring(desc.length).trim();
+            };
+        });
 
         callback(null, result);
     }
