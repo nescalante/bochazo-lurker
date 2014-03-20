@@ -101,7 +101,7 @@ module.exports = {
                 })
                 .map(function (i) {
                     result.tags.push(i);
-                })
+                });
         });
 
         querySelector('p.negro.txt12').each(function (ix, item) { 
