@@ -27,6 +27,7 @@ module.exports = {
                 console.log('');
 
                 util.batch(hrefs, 6, function (item, index, next) {
+                    var names = {};
                     console.log('loading place ' + (index + 1) + '/' + hrefs.length);
 
                     places.get(hrefs[index], strategy, options, function (err, result) { 
@@ -34,15 +35,21 @@ module.exports = {
                             throw err;
                         }
 
-                        total.push(result);
+                        if (names[result._id]) {
+                            result._id = result._id + '-2';
+                        }
+                        else {
+                            names[result._id] = 1;
+                        }
 
+                        total.push(result);
                         next();
                     });
                 }, function () {
                     console.log('scrapping finished!');
                     console.log('');
 
-                    fs.writeFile('data.json', JSON.stringify(total), function(err) {
+                    fs.writeFile(strategy.name.toLowerCase() + '.json', JSON.stringify(total), function(err) {
                         if(err) {
                           throw err;
                         }

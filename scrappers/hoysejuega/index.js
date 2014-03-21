@@ -43,6 +43,18 @@ module.exports = {
         result.howToArrive = getHowToArrive();
         result.courts = getCourts();
 
+        result._id = latinize(result.description
+                .toLowerCase()
+                .split(' ')
+                .map(function (i) {
+                    return i.trim();
+                })
+                .filter(function (i) {
+                    return i != '';
+                })
+                .join(' '))
+            .replace(/\W/g, function (value) { return value == ' ' ? '-' : ''; });
+
         http.get('http://localhost:62504/?url=http://maps.googleapis.com/maps/api/geocode/json?address=' + result.address + '&sensor=false&language=es', function (res) {
             var mapSource = '';
 
@@ -160,7 +172,9 @@ module.exports = {
                             phone = source[ix - 1].substring(0, source[ix - 1].length - i.length) + i;
                         }
 
-                        phones.push(phone);
+                        if (phones.indexOf(phone) < 0) {
+                            phones.push(phone);
+                        }
                     });
                 });
 
@@ -211,6 +225,18 @@ module.exports = {
                 })
                 .join(' ')
                 .trim();
+        }
+
+        function latinize(value) {
+            var translate = /[áéíóúÁÉÍÓÚ]/g,
+                charMap = {
+                    'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
+                    'Á': 'A', 'É': 'E', 'Í': 'I', 'Ó': 'O', 'Ú': 'U'
+                };
+
+            return value.replace(translate, function(match) { 
+                return charMap[match]; 
+            });
         }
     }
 };
