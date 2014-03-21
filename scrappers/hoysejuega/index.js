@@ -55,7 +55,7 @@ module.exports = {
                 .join(' '))
             .replace(/\W/g, function (value) { return value == ' ' ? '-' : ''; });
 
-        http.get('http://localhost:62504/?url=http://maps.googleapis.com/maps/api/geocode/json?address=' + result.address + '&sensor=false&language=es', function (res) {
+        http.get('http://maps.googleapis.com/maps/api/geocode/json?address=' + result.address + '&sensor=false&language=es', function (res) {
             var mapSource = '';
 
             res.on("data", function(body) {
