@@ -5,9 +5,11 @@ var pages = require('./pages'),
 
 module.exports = {
     import: function (strategy, options) {
-        console.log('getting pages for ' + strategy.name + ' ...');
+        var strat = strategy(options);
 
-        pages.get(strategy, options, function (err, data) {
+        console.log('getting pages for ' + strat.name + ' ...');
+
+        pages.get(strat, options, function (err, data) {
             if (err) {
                 throw err;
             }
@@ -16,7 +18,7 @@ module.exports = {
             console.log('');
             console.log('loading places resources ...');
 
-            places.getUrls(data, strategy, options, function (err, hrefs) {
+            places.getUrls(data, strat, options, function (err, hrefs) {
                 var total = [];
 
                 if (err) {
@@ -30,7 +32,7 @@ module.exports = {
                     var names = {};
                     console.log('loading place ' + (index + 1) + '/' + hrefs.length);
 
-                    places.get(hrefs[index], strategy, options, function (err, result) { 
+                    places.get(hrefs[index], strat, options, function (err, result) { 
                         if (err) {
                             throw err;
                         }
@@ -49,7 +51,7 @@ module.exports = {
                     console.log('scrapping finished!');
                     console.log('');
 
-                    fs.writeFile(strategy.name.toLowerCase() + '.json', JSON.stringify(total), function(err) {
+                    fs.writeFile(strat.name.toLowerCase() + '.json', JSON.stringify(total), function(err) {
                         if(err) {
                           throw err;
                         }

@@ -17,7 +17,7 @@ module.exports = {
 
             var url = prepend + item;
 
-            getByPage(url, strategy, function (err, resources) {
+            getByPage(url, options, strategy, function (err, resources) {
                 if (err) {
                     callback(err);
                     return;
@@ -43,7 +43,10 @@ module.exports = {
 
         prepend = (options && options.prepend) || '';
 
-        util.load(prepend + placeUrl, function (err, querySelector) {
+        util.load({
+            url: prepend + placeUrl,
+            proxy: options.proxy
+        }, function (err, querySelector) {
             if (err) {
                 callback(err, null);
                 return;
@@ -54,8 +57,11 @@ module.exports = {
     }
 };
 
-function getByPage(pageUrl, strategy, callback) {
-    util.load(pageUrl, function (err, querySelector) {
+function getByPage(pageUrl, options, strategy, callback) {
+    util.load({
+        url: pageUrl,
+        proxy: options.proxy
+    }, function (err, querySelector) {
         if (err) {
             callback(err);
             return;

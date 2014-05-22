@@ -1,24 +1,18 @@
-var http = require('http'),
-    cheerio = require('cheerio');
+var request = require('request');
+var cheerio = require('cheerio');
 
 module.exports = {
-    load: function (url, callback) {
-        http.get(url, function (res) {
-            var data = '';
+    load: function (options, callback) {
+        request(options, function (err, res, data) {
+            var querySelector = cheerio.load(data);
 
-            res.on("data", function(body) {
-                data += body;
-            });
-
-            res.on('end', function() {
-                var querySelector = cheerio.load(data);
-
-                callback(null, querySelector);
-            });
+            callback(null, querySelector);
         }).on('error', function (e) {
             callback(e);
         });
     },
+
+    // use batch package here
     batch: function(array, size, callback, done) {
         var index = 0,
             i = 0,

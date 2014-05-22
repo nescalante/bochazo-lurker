@@ -1,68 +1,65 @@
-var http = require('http');
+var request = require('request');
 
-module.exports = {
-    name: 'HoySeJuega',
-    pagesUrl: 'http://www.hoysejuega.com/listado-canchas.htm',
-    getPages: function (querySelector, callback) {
-        var hrefs = [];
-        
-        querySelector('a').each(function (index, item) {
-            var href = querySelector(item).attr('href');
+module.exports = function(options) {
+    return {
+        name: 'HoySeJuega',
+        pagesUrl: 'http://www.hoysejuega.com/listado-canchas.htm',
+        getPages: function (querySelector, callback) {
+            var hrefs = [];
+            
+            querySelector('a').each(function (index, item) {
+                var href = querySelector(item).attr('href');
 
-            if (href.indexOf('page_number') > 0) {
-                href = href.substr(0, href.indexOf('&'));
+                if (href.indexOf('page_number') > 0) {
+                    href = href.substr(0, href.indexOf('&'));
 
-                if (hrefs.indexOf(href) < 0) {
-                    hrefs.push(href);
+                    if (hrefs.indexOf(href) < 0) {
+                        hrefs.push(href);
+                    }
                 }
-            }
-        });
-
-        callback(null, hrefs);
-    },
-    getPlacesByPage: function (querySelector, callback) {
-        var hrefs = [];
-
-        querySelector('.izquierda .titulo a').each(function (index, item) {
-            var href = querySelector(item).attr('href');
-
-            hrefs.push(href);
-        });
-
-        callback(null, hrefs);
-    },
-    getPlace: function (querySelector, callback) {
-        var result = {};
-
-        // place data scan
-        result.description = getDescription();
-        result.address = getAddress();
-        result.phones = getPhones();
-        result.tags = getTags();
-        result.info = getInfo();
-        result.howToArrive = getHowToArrive();
-        result.courts = getCourts();
-
-        result._id = latinize(result.description
-                .toLowerCase()
-                .split(' ')
-                .map(function (i) {
-                    return i.trim();
-                })
-                .filter(function (i) {
-                    return i != '';
-                })
-                .join(' '))
-            .replace(/\W/g, function (value) { return value == ' ' ? '-' : ''; });
-
-        http.get('http://maps.googleapis.com/maps/api/geocode/json?address=' + result.address + '&sensor=false&language=es', function (res) {
-            var mapSource = '';
-
-            res.on("data", function(body) {
-                mapSource += body;
             });
 
-            res.on('end', function() {
+            callback(null, hrefs);
+        },
+        getPlacesByPage: function (querySelector, callback) {
+            var hrefs = [];
+
+            querySelector('.izquierda .titulo a').each(function (index, item) {
+                var href = querySelector(item).attr('href');
+
+                hrefs.push(href);
+            });
+
+            callback(null, hrefs);
+        },
+        getPlace: function (querySelector, callback) {
+            var result = {};
+
+            // place data scan
+            result.description = getDescription();
+            result.address = getAddress();
+            result.phones = getPhones();
+            result.tags = getTags();
+            result.info = getInfo();
+            result.howToArrive = getHowToArrive();
+            result.courts = getCourts();
+
+            result._id = latinize(result.description
+                    .toLowerCase()
+                    .split(' ')
+                    .map(function (i) {
+                        return i.trim();
+                    })
+                    .filter(function (i) {
+                        return i != '';
+                    })
+                    .join(' '))
+                .replace(/\W/g, function (value) { return value == ' ' ? '-' : ''; });
+
+            request({
+                url: 'http://maps.googleapis.com/maps/api/geocode/json?address=' + result.address + '&sensor=false&language=es',
+                proxy: options.proxy
+            }, function (err, res, mapSource) {
                 var json = eval("(" + mapSource + ")");
 
                 if (json.results && json.results[0]) {
@@ -82,161 +79,161 @@ module.exports = {
                 }
 
                 callback(null, result);
-            });
-        }).on('error', function (err) {
-            result.addressError = true;
+            }).on('error', function (err) {
+                result.addressError = true;
 
-            callback(null, result);
-        });
-
-        function getCourts() {
-            var courts = [];
-
-            querySelector('div[id=detalleCancha_complejo]').each(function (ix, item) {
-                var court = {},
-                    title = querySelector(item).find('.txt16');
-                
-                if (title.length) {
-                    var source = querySelector(item).find('.txt14').text();
-
-                    court.name = title.text().trim();
-                    court.isIndoor = source.indexOf('Techada') > 0;
-                    court.isLighted = source.indexOf('Con Luz') > 0;
-                    court.players = parseInt(source.substring(14, 17));
-                    court.sport = 'Fútbol';
-                    court.surface = source
-                        .substring(source.indexOf('Tipo de piso: ') + 14);
-                    court.surface = court.surface
-                        .substring(0, court.surface.indexOf(' -'))
-                        .trim();
-
-                    courts.push(court);
-                }
+                callback(null, result);
             });
 
-            return courts;
-        }
+            function getCourts() {
+                var courts = [];
 
-        function getDescription() {
-            var title = querySelector('title').text();
+                querySelector('div[id=detalleCancha_complejo]').each(function (ix, item) {
+                    var court = {},
+                        title = querySelector(item).find('.txt16');
+                    
+                    if (title.length) {
+                        var source = querySelector(item).find('.txt14').text();
 
-            return title.substring(0, title.indexOf(' - Dirección'));
-        }
+                        court.name = title.text().trim();
+                        court.isIndoor = source.indexOf('Techada') > 0;
+                        court.isLighted = source.indexOf('Con Luz') > 0;
+                        court.players = parseInt(source.substring(14, 17));
+                        court.sport = 'Fútbol';
+                        court.surface = source
+                            .substring(source.indexOf('Tipo de piso: ') + 14);
+                        court.surface = court.surface
+                            .substring(0, court.surface.indexOf(' -'))
+                            .trim();
 
-        function getAddress() {
-            var addresses = [];
-
-            querySelector('p.txt15')
-                .text()
-                .split('\r\n')
-                .join(',')
-                .split(',')
-                .map(function (i) {
-                    return i.trim();
-                })
-                .filter(function (i) {
-                    return i != '' && i.substring(0, 5).toLowerCase() != 'entre';
-                })
-                .map(function (i) {
-                    if (addresses.indexOf(i) < 0) {
-                        addresses.push(i);
+                        courts.push(court);
                     }
                 });
 
-            return addresses.join(', ');
-        }
+                return courts;
+            }
 
-        function getPhones() {
-            var phones = [];
+            function getDescription() {
+                var title = querySelector('title').text();
 
-            querySelector('.txt18 + .txt16')
-                .text()
-                .split(',')
-                .map(function (i) {
-                    return i.trim();
-                })
-                .filter(function (i) {
-                    return i != '';
-                })
-                .forEach(function (item, index) {
-                    var source = item
-                        .split('/')
-                        .map(function (i) {
-                            return i.trim();
+                return title.substring(0, title.indexOf(' - Dirección'));
+            }
+
+            function getAddress() {
+                var addresses = [];
+
+                querySelector('p.txt15')
+                    .text()
+                    .split('\r\n')
+                    .join(',')
+                    .split(',')
+                    .map(function (i) {
+                        return i.trim();
+                    })
+                    .filter(function (i) {
+                        return i != '' && i.substring(0, 5).toLowerCase() != 'entre';
+                    })
+                    .map(function (i) {
+                        if (addresses.indexOf(i) < 0) {
+                            addresses.push(i);
+                        }
+                    });
+
+                return addresses.join(', ');
+            }
+
+            function getPhones() {
+                var phones = [];
+
+                querySelector('.txt18 + .txt16')
+                    .text()
+                    .split(',')
+                    .map(function (i) {
+                        return i.trim();
+                    })
+                    .filter(function (i) {
+                        return i != '';
+                    })
+                    .forEach(function (item, index) {
+                        var source = item
+                            .split('/')
+                            .map(function (i) {
+                                return i.trim();
+                            });
+
+                        source.forEach(function (i, ix) {
+                            var phone = i;
+
+                            if (ix > 0) {
+                                phone = source[ix - 1].substring(0, source[ix - 1].length - i.length) + i;
+                            }
+
+                            if (phones.indexOf(phone) < 0) {
+                                phones.push(phone);
+                            }
                         });
+                    });
 
-                    source.forEach(function (i, ix) {
-                        var phone = i;
+                return phones;
+            }
 
-                        if (ix > 0) {
-                            phone = source[ix - 1].substring(0, source[ix - 1].length - i.length) + i;
-                        }
+            function getTags() {
+                var tags = [];
 
-                        if (phones.indexOf(phone) < 0) {
-                            phones.push(phone);
-                        }
+                querySelector('ul.txt15 li').each(function (ix, item) {
+                querySelector(item).text()
+                    .split('/')
+                    .map(function (i) {
+                        return i.trim().toLowerCase();
+                    })
+                    .filter(function (i) {
+                        return i != '';
+                    })
+                    .map(function (i) {
+                        tags.push(i);
                     });
                 });
 
-            return phones;
-        }
+                return tags;
+            }
 
-        function getTags() {
-            var tags = [];
+            function getInfo() {
+                var info;
 
-            querySelector('ul.txt15 li').each(function (ix, item) {
-            querySelector(item).text()
-                .split('/')
-                .map(function (i) {
-                    return i.trim().toLowerCase();
-                })
-                .filter(function (i) {
-                    return i != '';
-                })
-                .map(function (i) {
-                    tags.push(i);
+                querySelector('p.negro.txt12').each(function (ix, item) { 
+                    var desc = 'DESCRIPCIÓN:',
+                        text = querySelector(item).text();
+
+                    if (text.indexOf(desc) == 0) {
+                        info = text.substring(desc.length).trim();
+                    };
                 });
-            });
 
-            return tags;
+                return info;
+            }
+
+            function getHowToArrive() {
+                return querySelector('p.txt13')
+                    .text()
+                    .split('\r\n')
+                    .map(function (i) {
+                        return i.trim();
+                    })
+                    .join(' ')
+                    .trim();
+            }
+
+            function latinize(value) {
+                var translate = /[áéíóúÁÉÍÓÚ]/g,
+                    charMap = {
+                        'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
+                        'Á': 'A', 'É': 'E', 'Í': 'I', 'Ó': 'O', 'Ú': 'U'
+                    };
+
+                return value.replace(translate, function(match) { 
+                    return charMap[match]; 
+                });
+            }
         }
-
-        function getInfo() {
-            var info;
-
-            querySelector('p.negro.txt12').each(function (ix, item) { 
-                var desc = 'DESCRIPCIÓN:',
-                    text = querySelector(item).text();
-
-                if (text.indexOf(desc) == 0) {
-                    info = text.substring(desc.length).trim();
-                };
-            });
-
-            return info;
-        }
-
-        function getHowToArrive() {
-            return querySelector('p.txt13')
-                .text()
-                .split('\r\n')
-                .map(function (i) {
-                    return i.trim();
-                })
-                .join(' ')
-                .trim();
-        }
-
-        function latinize(value) {
-            var translate = /[áéíóúÁÉÍÓÚ]/g,
-                charMap = {
-                    'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
-                    'Á': 'A', 'É': 'E', 'Í': 'I', 'Ó': 'O', 'Ú': 'U'
-                };
-
-            return value.replace(translate, function(match) { 
-                return charMap[match]; 
-            });
-        }
-    }
+    };
 };

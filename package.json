@@ -9,6 +9,8 @@
   },
   "repository": {},
   "dependencies": {
-    "cheerio": "~0.13.1"
+    "cheerio": "~0.13.1",
+    "grunt": "~0.4.4",
+    "request": "~2.36.0"
   }
 }

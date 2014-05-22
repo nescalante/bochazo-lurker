@@ -11,9 +11,10 @@ module.exports = {
 
         prepend = (options && options.prepend) || '';
 
-        util.load(prepend + strategy.pagesUrl, function (err, querySelector) {
-            var hrefs;
-
+        util.load({ 
+            url: prepend + strategy.pagesUrl,
+            proxy: options.proxy
+        }, function (err, querySelector) {
             if (err) {
                 callback(err);
                 return;
