@@ -32,8 +32,9 @@ module.exports = function(options) {
 
             callback(null, hrefs);
         },
-        getPlace: function (querySelector, callback) {
+        getPlace: function (querySelector, url, callback) {
             var result = {};
+            var mapResolver = require('./mapresolver');
 
             // place data scan
             result.description = getDescription();
@@ -51,39 +52,12 @@ module.exports = function(options) {
                         return i.trim();
                     })
                     .filter(function (i) {
-                        return i != '';
+                        return i != '' && i != '-';
                     })
                     .join(' '))
                 .replace(/\W/g, function (value) { return value == ' ' ? '-' : ''; });
 
-            request({
-                url: 'http://maps.googleapis.com/maps/api/geocode/json?address=' + result.address + '&sensor=false&language=es',
-                proxy: options.proxy
-            }, function (err, res, mapSource) {
-                var json = eval("(" + mapSource + ")");
-
-                if (json.results && json.results[0]) {
-                    result.originalAddress = result.address;
-                    result.address = json.results[0].formatted_address;
-                    result.addressComponents = json.results[0].address_components.map(function (i) {
-                        return {
-                            longName: i.long_name,
-                            shortName: i.short_name,
-                            types: i.types
-                        };
-                    });
-                    result.location = [json.results[0].geometry.location.lat, json.results[0].geometry.location.lng];
-                }
-                else {
-                    result.addressError = true;
-                }
-
-                callback(null, result);
-            }).on('error', function (err) {
-                result.addressError = true;
-
-                callback(null, result);
-            });
+            mapResolver(result, querySelector, options, callback);
 
             function getCourts() {
                 var courts = [];
@@ -128,14 +102,77 @@ module.exports = function(options) {
                     .join(',')
                     .split(',')
                     .map(function (i) {
-                        return i.trim();
+                        return i.trim().replace(/´/g, ' ');
                     })
                     .filter(function (i) {
-                        return i != '' && i.substring(0, 5).toLowerCase() != 'entre';
+                        return i != '' && 
+                            i.substring(0, 5).toLowerCase() != 'entre' && 
+
+                            // exceptions
+                            i != 'Abasto' && 
+                            i != 'Parque Chas' &&
+                            i != 'Echeverria' && 
+                            i != 'Gral. Rodriguez 1' &&
+                            i != 'Warnes' &&
+                            i != 'Ceretti' &&
+                            i != 'Costanera' &&
+                            i != 'altura Juan B. Justo 7400' &&
+                            i != 'Muñecas' &&
+                            i != 'Lugano' &&
+                            i != 'Bajo Flores' && 
+                            i != 'Av La Fuente' &&
+                            i != 'Parque Centenario' &&
+                            i != 'Triunvirato' &&
+                            i != 'San cayetano' &&
+                            i != 'Dorregueira' &&
+                            i != 'Bermudez';
                     })
                     .map(function (i) {
+                        // corrections
+                        if (i == 'Janner') {
+                            i = 'Club Daom';
+                        }
+                        if (i == 'J. B. Alberdi 4565 - Bajo la Autopista') {
+                            i = 'J. B. Alberdi 4565';
+                        }
+                        if (i == 'Cantilo') {
+                            i = 'y Cantilo';
+                        }
+                        if (i == 'Matheu 1350 (1249)  y Au. 25 de mayo') {
+                            i = 'Matheu 1350';
+                        }
+                        if (i == 'Av. Carabobo 899 (Abajo de la AU1 - Flores)') {
+                            i = 'Av Carabobo 899';
+                        }
+                        if (i == 'Av. Cantilo y Guiraldes (frente a Ciudad Universitaria).') {
+                            i = 'Parque Norte';
+                        }
+                        if (i == 'Av. roca y av. gral paz') {
+                            i = 'Parque Polideportivo Pres Julio A. Roca';
+                        }
+                        if (i == 'Av Riestra y La Fuente') {
+                            i = 'Av Riestra, y Av Lafuente';
+                        }
+                        if (i == 'California 1855 y Aut. Sur Barracas') {
+                            i = 'California 1855';
+                        }
+
                         if (addresses.indexOf(i) < 0) {
-                            addresses.push(i);
+                            var addIt = true;
+
+                            for (var x = 0; x < addresses.length; x++) {
+                                if (i == 'Capital Federal' && addresses[x] == 'Haedo') {
+                                    addIt = false;
+                                }
+
+                                if (i == 'Capital Federal' && addresses[x] == 'Boulogne') {
+                                    addIt = false;
+                                }
+                            }
+
+                            if (addIt) {
+                                addresses.push(i);
+                            }
                         }
                     });
 

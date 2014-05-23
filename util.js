@@ -1,12 +1,17 @@
 var request = require('request');
 var cheerio = require('cheerio');
+var log = require('./core/log').info;
 
 module.exports = {
     load: function (options, callback) {
         request(options, function (err, res, data) {
             var querySelector = cheerio.load(data);
 
-            callback(null, querySelector);
+            querySelector.getSource = function () {
+                return data;
+            };
+
+            callback(null, querySelector, data);
         }).on('error', function (e) {
             callback(e);
         });
@@ -32,21 +37,29 @@ module.exports = {
             var item = array[index];
 
             if (item) {
-                callback(item, index, function () {
-                    processed++;
-
-                    if (array[index]) { 
-                        next();
-                    }
-                    else if (!justSent && !array[processed] && done) {
-                        done();
-
-                        justSent = true;
-                    }
-                });
+                try {
+                    callback(item, index, doNext);
+                }
+                catch(err) {
+                    log("error on item: " + item, err);
+                    doNext();
+                }
             }
 
             index++;
+
+            function doNext() {
+                processed++;
+
+                if (array[index]) { 
+                    next();
+                }
+                else if (!justSent && !array[processed] && done) {
+                    done();
+
+                    justSent = true;
+                }
+            }
         }
     }
 };

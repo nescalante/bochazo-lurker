@@ -13,14 +13,14 @@ module.exports = {
         prepend = (options && options.prepend) || '';
         
         util.batch(pageUrls, 6, function (item, index, next) {
-            console.log('loading page ' + (index + 1) + '/' + pageUrls.length);
+            clearLine();
+            process.stdout.write('loading page ' + (index + 1) + '/' + pageUrls.length);
 
             var url = prepend + item;
 
             getByPage(url, options, strategy, function (err, resources) {
                 if (err) {
-                    callback(err);
-                    return;
+                    throw err;
                 }
 
                 resources.forEach(function (href) {
@@ -30,6 +30,7 @@ module.exports = {
                 next();
             });
         }, function () {
+            clearLine();
             callback(null, result);
         });
     },
@@ -52,7 +53,7 @@ module.exports = {
                 return;
             }
 
-            strategy.getPlace(querySelector, callback);
+            strategy.getPlace(querySelector, prepend + placeUrl, callback);
         })
     }
 };
@@ -69,4 +70,9 @@ function getByPage(pageUrl, options, strategy, callback) {
 
         strategy.getPlacesByPage(querySelector, callback);
     });
+}
+
+function clearLine() {
+    process.stdout.clearLine();
+    process.stdout.cursorTo(0);
 }
