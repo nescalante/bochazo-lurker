@@ -5,6 +5,8 @@ var pages = require('./pages'),
 
 module.exports = {
     import: function (strategy, options) {
+        options = options || {};
+
         var strat = strategy(options);
 
         process.stdout.write('getting pages for ' + strat.name + ' ...');
