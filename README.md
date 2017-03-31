@@ -1,5 +1,7 @@
 ### Strategy Definition
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/nescalante/bochazo-lurker.svg)](https://greenkeeper.io/)
+
 Strategy must implement the following properties:
 
 `name: String`: File name to generate json.
